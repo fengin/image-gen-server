@@ -14,7 +14,7 @@ from jimeng import generate_images, create_completion, create_completion_stream
 
 async def main():
     # 替换为你的sessionid
-    token = "057f7addf85602af5af9d298d5386fe0"
+    token = "57f7addf85602***af9d29**5386f**"
     
     # 1. 基础图像生成
     print("1. 生成图像:")

@@ -14,7 +14,7 @@ import base64
 from proxy.jimeng import generate_images  # 导入proxy.jimeng模块
 
 # API配置
-JIMENG_API_TOKEN = "057f7addf85602af5af9d298d5386fe0" # 你登录即梦获得的session_id   
+JIMENG_API_TOKEN = "057f7addf85602***af9d29**5386f**" # 你登录即梦获得的session_id   
 IMG_SAVA_FOLDER = "D:\code\image-gen-service\images" # 图片默认保存路径
 
 
