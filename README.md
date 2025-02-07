@@ -1,5 +1,9 @@
 # Image-Gen-Server
 
+<div align="center">
+  <img src="images/logo_0.png" alt="Image-Gen-Server Logo" width="450">
+</div>
+
 基于即梦AI的图像生成服务，专门设计用于与Cursor IDE集成。它接收来自Cursor的文本描述，生成相应的图像，并提供图片下载和保存功能。
 
 ## 特性
@@ -11,28 +15,33 @@
 - 当前版本依赖jimeng-free-api，需要先部署jimeng-free-api,详见https://github.com/LLM-Red-Team/jimeng-free-api
 
 ## 安装
+1. 环境准备
+- python 3.10+
+- 安装npm
+- 安装nodejs
+- 安装 pip install uv
+- 如果要调试，还需要安装这个：npm install -g @modelcontextprotocol/inspector@0.4.0
 
-1. 克隆项目
+2. 克隆项目
 ```bash
-git clone https://your-repository/image-gen-server.git
+git clone https://github.com/fengin/image-gen-server.git
 cd image-gen-server
 ```
 
-2. 安装依赖
+3. 安装依赖
 ```bash
 pip install -r requirements.txt
 pip install uv
 ```
 
-3. 设置即梦逆向接口和Token以及图片默认保存地址
+4. 设置即梦逆向接口和Token以及图片默认保存地址
 修改server.py文件下面三个配置
 ```bash
 # API配置
 JIMENG_API_URL = "http://192.168.1.20:8000" # jimeng-free-api 部署地址
 JIMENG_API_TOKEN = "Bearer 057f7addf85dxxxxxxxxxxxxx" # 你登录即梦获得的session_id，支持多个，在后面用逗号分隔   
-IMG_SAVA_FOLDER = "D:\code\image-gen-service\images" # 图片默认保存路径
+IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
 ```
-
 
 ## Cursor集成
 
@@ -49,15 +58,16 @@ IMG_SAVA_FOLDER = "D:\code\image-gen-service\images" # 图片默认保存路径
      uv run --with fastmcp fastmcp run D:\code\image-gen-service\server.py
      ```
      注意：将路径替换为你的实际项目路径
-     - Windows示例: ` uv run --with fastmcp fastmcp run D:\code\image-gen-service\server.py`
+     - Windows示例: ` uv run --with fastmcp fastmcp run D:/code/image-gen-service/server.py`
      - macOS/Linux示例: ` uv run --with fastmcp fastmcp run /Users/username/code/image-gen-server/server.py`
 
-    填写完后，会弹出一个黑窗口，然后你就可以在Cursor中使用/generate_image命令生成图片了，目前黑窗口会一直运行，目前还没办法解决弹出这个的问题
+    windows路径问题比较多，D:/code/image-gen-server/server.py 各种斜杠都试下
+
+    填写完后，会弹出一个黑窗口，然后你就可以叫Cursor给你生成需要的图片了，目前黑窗口会一直运行，目前还没办法解决弹出这个的问题
 
 ## 使用方法
 
 在Cursor中，你要让cursor生成图片，在agent模式下，你提示它了解下图片工具使用方法，然后直接提你要生成的图片要求，保存位置就行了
-
 
 ## 获取即梦Token
 
@@ -72,7 +82,7 @@ IMG_SAVA_FOLDER = "D:\code\image-gen-service\images" # 图片默认保存路径
 ### generate_image
 
 ```python
-async def generate_image(prompt: str, file_name: str, save_folder: str = None, sample_strength: float = 0.5) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+async def generate_image(prompt: str, file_name: str, save_folder: str = None, sample_strength: float = 0.5, width: int = 1024, height: int = 1024) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
     """根据文本描述生成图片
     
     Args:
@@ -80,16 +90,41 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
         file_name: 生成图片的文件名(不含路径，如果没有后缀则默认使用.jpg)
         save_folder: 图片保存绝对地址目录(可选,默认使用IMG_SAVA_FOLDER)
         sample_strength: 生成图片的精细度(可选,范围0-1,默认0.5)
+        width: 生成图片的宽度(可选,默认1024)
+        height: 生成图片的高度(可选,默认1024)
         
     Returns:
         List: 包含生成结果的JSON字符串
     """
 ```
 
+### 使用示例
+
+```cmd
+
+# cursor agent模式下
+帮我把images目录下面的logo_0.png 图片logo加到readme.md里面 放在适当的位置
+
+```
+
+
 ## 许可证
 
 MIT License 
+作者：凌封
+
 
 ## 故障排除
 
-待补充
+1.配置完后跳出黑窗口，很快消失，工具状态变成No tools found
+
+  原因：没有正常启动，一般有以下原因
+
+- 配置命令不对，检查命令是否正确，一般是server.py路径不对，或者路径中包含中文，或者正反斜杠不对
+- 依赖的环境没准备好
+- 依赖运行的终端不对，像我windows的，终端有git bash，cmd，powershell，wsl等，这些终端都试下，cursor配置我这默认终端是cmd，如果你在这对应终端运行报错，一般是环境没装好，安装环境就可以
+
+2.正常运行后，想看调用日志，或者调试怎么弄
+
+  命令改成：uv run --with fastmcp fastmcp dev D:/code/image-gen-service/server.py
+  即把最后一个run 改成 dev， 你也可以找个终端运行看下，会有一个调试地址输出：http://localhost:5173/，你可以浏览器打开这地址MCP Inspector进行调试，具体MCP Inspector怎么使用，可以看官方文档

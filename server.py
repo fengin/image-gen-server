@@ -1,3 +1,7 @@
+#描述：基于即梦AI的图像生成服务，专门设计用于与Cursor IDE集成。它接收来自Cursor的文本描述，生成相应的图像，并提供图片下载和保存功能。
+#作者：凌封 (微信fengin)
+#GITHUB: https://github.com/fengin/image-gen-server.git
+
 import os
 import logging
 from sys import stdin, stdout
@@ -10,7 +14,7 @@ import base64
 # API配置
 JIMENG_API_URL = "http://192.168.1.20:8000" # jimeng-free-api 部署地址
 JIMENG_API_TOKEN = "Bearer 057f7addf85602af5af9d298d5386fe0" # 你登录即梦获得的session_id   
-IMG_SAVA_FOLDER = "D:\code\image-gen-service\images" # 图片默认保存路径
+IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
 
 
 stdin.reconfigure(encoding='utf-8')
@@ -52,6 +56,16 @@ async def list_tools():
                         "type": "number",
                         "description": "生成图片的精细度(可选,范围0-1,默认0.5)",
                         "required": False
+                    },
+                    "width": {
+                        "type": "number",
+                        "description": "生成图片的宽度(可选,默认1024)",
+                        "required": False
+                    },
+                    "height": {
+                        "type": "number",
+                        "description": "生成图片的高度(可选,默认1024)",
+                        "required": False
                     }
                 }
             }
@@ -59,7 +73,7 @@ async def list_tools():
     }
 
 @mcp.tool("generate_image")
-async def generate_image(prompt: str, file_name: str, save_folder: str = None, sample_strength: float = 0.5) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+async def generate_image(prompt: str, file_name: str, save_folder: str = None, sample_strength: float = 0.5, width: int = 1024, height: int = 1024) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
     """根据文本描述生成图片
     
     Args:
@@ -67,6 +81,8 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
         file_name: 生成图片的文件名(不含路径，如果没有后缀则默认使用.jpg)
         save_folder: 图片保存绝对地址目录(可选,默认使用IMG_SAVA_FOLDER)
         sample_strength: 生成图片的精细度(可选,范围0-1,默认0.5)
+        width: 生成图片的宽度(可选,默认1024)
+        height: 生成图片的高度(可选,默认1024)
         
     Returns:
         List: 包含生成结果的JSON字符串
@@ -76,6 +92,21 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
     # 验证sample_strength参数范围
     if not 0 <= sample_strength <= 1:
         error_msg = f"sample_strength参数必须在0-1范围内,当前值: {sample_strength}"
+        logger.error(error_msg)
+        return [
+            types.TextContent(
+                type="text",
+                text=json.dumps({
+                    "success": False,
+                    "error": error_msg,
+                    "images": []
+                }, ensure_ascii=False)
+            )
+        ]
+    
+    # 验证width和height参数
+    if width <= 0 or height <= 0:
+        error_msg = f"width和height必须大于0,当前值: width={width}, height={height}"
         logger.error(error_msg)
         return [
             types.TextContent(
@@ -108,8 +139,8 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
             "model": "jimeng-2.1",
             "prompt": prompt,
             "negativePrompt": "",
-            "width": 1024,
-            "height": 1024,
+            "width": width,
+            "height": height,
             "sample_strength": sample_strength
         }
 
