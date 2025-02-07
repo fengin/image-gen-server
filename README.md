@@ -6,6 +6,12 @@
 
 基于即梦AI的图像生成服务，专门设计用于与Cursor IDE集成。它接收来自Cursor的文本描述，生成相应的图像，并提供图片下载和保存功能。
 
+## 系统架构
+
+<div align="center">
+  <img src="images/architecture_flow_2.png" alt="System Architecture" width="800">
+</div>
+
 ## 特性
 
 - 与Cursor IDE完美集成
