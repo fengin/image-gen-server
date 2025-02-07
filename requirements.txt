@@ -1,0 +1,6 @@
+aiohttp>=3.8.1
+aiofiles>=0.8.0
+requests>=2.26.0
+psutil>=5.8.0
+fastmcp==0.4.1
+mcp==1.2.1
