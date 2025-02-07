@@ -6,11 +6,8 @@
 
 基于即梦AI的图像生成服务，专门设计用于与Cursor IDE集成。它接收来自Cursor的文本描述，生成相应的图像，并提供图片下载和保存功能。
 
-## 系统架构
+更多AI知识，见AI全书(https://aibook.ren)
 
-<div align="center">
-  <img src="images/architecture_flow_2.png" alt="System Architecture" width="800">
-</div>
 
 ## 特性
 
@@ -18,7 +15,7 @@
 - 支持文本到图像的生成
 - 自动保存生成的图像
 - 支持自定义保存路径
-- 当前版本依赖jimeng-free-api，需要先部署jimeng-free-api,详见https://github.com/LLM-Red-Team/jimeng-free-api
+- 一次生成四张图，供更多选择
 
 ## 安装
 1. 环境准备
@@ -40,12 +37,11 @@ pip install -r requirements.txt
 pip install uv
 ```
 
-4. 设置即梦逆向接口和Token以及图片默认保存地址
-修改server.py文件下面三个配置
+4. 设置即梦Token和图片默认保存地址
+修改server.py文件下面两个配置
 ```bash
 # API配置
-JIMENG_API_URL = "http://192.168.1.20:8000" # jimeng-free-api 部署地址
-JIMENG_API_TOKEN = "Bearer 057f7addf85dxxxxxxxxxxxxx" # 你登录即梦获得的session_id，支持多个，在后面用逗号分隔   
+JIMENG_API_TOKEN = "057f7addf85dxxxxxxxxxxxxx" # 你登录即梦获得的session_id，支持多个，在后面用逗号分隔   
 IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
 ```
 
@@ -81,7 +77,7 @@ IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
 2. 登录账号
 3. 按F12打开开发者工具
 4. 在Application > Cookies中找到`sessionid`
-5. 将找到的sessionid设置为JIMENG_TOKEN环境变量
+5. 将找到的sessionid设置到server.py的JIMENG_API_TOKEN中
 
 ## 工具函数说明
 
@@ -104,21 +100,31 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
     """
 ```
 
+### 技术实现
+1. server.py采用了fastmcp实现了mcp sever的能力，提供给cursor/claude使用
+
+2.sever.py调用了proxy.jimeng模块逆向与即梦AI进行交互。
+proxy.jimeng逆向模块也可以单独install使用，主要提供了以下主要功能：
+
+- 图像生成（generate_images）
+- 同步对话补全（create_completion）
+- 流式对话补全（create_completion_stream）
+- 多账号token支持
+- 完整的错误处理
+
+更多详细信息请参考`proxy/jimeng/README.md`。
+
 ### 使用示例
 
 ```cmd
-
 # cursor agent模式下
 帮我把images目录下面的logo_0.png 图片logo加到readme.md里面 放在适当的位置
-
 ```
-
 
 ## 许可证
 
 MIT License 
 作者：凌封
-
 
 ## 故障排除
 

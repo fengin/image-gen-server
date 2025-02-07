@@ -1,6 +1,7 @@
 #描述：基于即梦AI的图像生成服务，专门设计用于与Cursor IDE集成。它接收来自Cursor的文本描述，生成相应的图像，并提供图片下载和保存功能。
 #作者：凌封 (微信fengin)
 #GITHUB: https://github.com/fengin/image-gen-server.git
+#相关知识可以看AI全书：https://aibook.ren 
 
 import os
 import logging
@@ -10,11 +11,11 @@ import json
 from fastmcp import FastMCP
 import mcp.types as types
 import base64
+from proxy.jimeng import generate_images  # 导入proxy.jimeng模块
 
 # API配置
-JIMENG_API_URL = "http://192.168.1.20:8000" # jimeng-free-api 部署地址
-JIMENG_API_TOKEN = "Bearer 057f7addf85602af5af9d298d5386fe0" # 你登录即梦获得的session_id   
-IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
+JIMENG_API_TOKEN = "057f7addf85602af5af9d298d5386fe0" # 你登录即梦获得的session_id   
+IMG_SAVA_FOLDER = "D:\code\image-gen-service\images" # 图片默认保存路径
 
 
 stdin.reconfigure(encoding='utf-8')
@@ -89,7 +90,21 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
     """
     logger.info(f"收到生成请求: {prompt}")
     
-    # 验证sample_strength参数范围
+    # 验证prompt参数
+    if not prompt:
+        error_msg = "prompt不能为空"
+        logger.error(error_msg)
+        return [
+            types.TextContent(
+                type="text",
+                text=json.dumps({
+                    "success": False,
+                    "error": error_msg,
+                    "images": []
+                }, ensure_ascii=False)
+            )
+        ]
+        # 验证sample_strength参数范围
     if not 0 <= sample_strength <= 1:
         error_msg = f"sample_strength参数必须在0-1范围内,当前值: {sample_strength}"
         logger.error(error_msg)
@@ -118,135 +133,73 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
                 }, ensure_ascii=False)
             )
         ]
-    
     # 检查并处理文件后缀
     if not os.path.splitext(file_name)[1]:
         file_name = f"{file_name}.jpg"
         logger.info(f"文件名没有后缀,使用默认后缀: {file_name}")
     
-    # 如果未指定保存目录,使用默认目录
-    if not save_folder:
-        save_folder = IMG_SAVA_FOLDER
-        logger.info(f"使用默认保存目录: {save_folder}")
+    # 检查并创建保存目录
+    save_folder = save_folder or IMG_SAVA_FOLDER
+    if not os.path.exists(save_folder):
+        os.makedirs(save_folder)
+        logger.info(f"创建保存目录: {save_folder}")
     
     try:
-        headers = {
-            "Content-Type": "application/json",
-            "Authorization": JIMENG_API_TOKEN
-        }
-        
-        payload = {
-            "model": "jimeng-2.1",
-            "prompt": prompt,
-            "negativePrompt": "",
-            "width": width,
-            "height": height,
-            "sample_strength": sample_strength
-        }
-
-        response = requests.post(
-            f"{JIMENG_API_URL}/v1/images/generations",
-            headers=headers,
-            json=payload,
-            timeout=300
+        # 调用proxy.jimeng模块生成图像
+        image_urls = generate_images(
+            model="jimeng-2.1",
+            prompt=prompt,
+            width=width,
+            height=height,
+            sample_strength=sample_strength,
+            negative_prompt="",
+            refresh_token=JIMENG_API_TOKEN
         )
         
-        if response.status_code != 200:
-            error_text = response.text
-            logger.error(f"API调用失败: {response.status_code} - {error_text}")
-            return [
-                types.TextContent(
-                    type="text",
-                    text=json.dumps({
-                        "success": False,
-                        "error": f"生成图片失败: {error_text}",
-                        "images": []
-                    }, ensure_ascii=False)
-                )
-            ]
-        
-        result = response.json()
-        image_urls = [img["url"] for img in result["data"]]
-        logger.info(f"获取到 {len(image_urls)} 张图片")
-        
-        save_results = []
+        # 下载并保存图片
+        saved_images = []
         for i, url in enumerate(image_urls):
-            result = download_and_save_image(url, save_folder, file_name, i)
-            if result:  # 只添加非None的结果
-                save_results.append(result)
+            # 构造保存路径
+            save_path = os.path.join(save_folder, file_name)
+            base_name, ext = os.path.splitext(save_path)
+            if i > 0:
+                save_path = f"{base_name}_{i}{ext}"
+            
+            # 下载图片
+            response = requests.get(url)
+            if response.status_code == 200:
+                with open(save_path, "wb") as f:
+                    f.write(response.content)
+                saved_images.append(save_path)
+                logger.info(f"图片已保存: {save_path}")
+            else:
+                logger.error(f"下载图片失败: {url}")
         
+        # 返回结果
         return [
             types.TextContent(
                 type="text",
                 text=json.dumps({
                     "success": True,
-                    "message": "图片生成完成",
-                    "images": save_results
+                    "error": None,
+                    "images": saved_images
                 }, ensure_ascii=False)
             )
         ]
-                    
-    except requests.Timeout:
-        logger.error("请求超时")
+        
+    except Exception as e:
+        error_msg = f"生成图片失败: {str(e)}"
+        logger.error(error_msg)
         return [
             types.TextContent(
                 type="text",
                 text=json.dumps({
                     "success": False,
-                    "error": "请求超时,请稍后重试",
+                    "error": error_msg,
                     "images": []
                 }, ensure_ascii=False)
             )
         ]
-    except Exception as e:
-        logger.error(f"生成图片时出错: {str(e)}", exc_info=True)
-        return [
-            types.TextContent(
-                type="text",
-                text=json.dumps({
-                    "success": False,
-                    "error": f"生成图片出错: {str(e)}",
-                    "images": []
-                }, ensure_ascii=False)
-            )
-        ]
-
-
-def download_and_save_image(image_url, save_folder, file_name, index):
-    """下载并保存单张图片
-    
-    Args:
-        image_url: 图片URL
-        save_folder: 保存目录路径
-        file_name: 文件名(不含路径，带后辍)
-        index: 图片索引
-        
-    Returns:
-        str: 成功时返回图保存地址,失败时返回None
-    """
-    try:
-        file_name_no_ext, ext = os.path.splitext(file_name)
-        indexed_file_name = f"{file_name_no_ext}_{index}{ext}"
-        save_path = os.path.join(save_folder, indexed_file_name)
-        
-        response = requests.get(image_url, timeout=60)
-        if response.status_code != 200:
-            logger.error(f"下载图片失败: {response.status_code} - {image_url}")
-            return None
-        
-        os.makedirs(save_folder, exist_ok=True)
-        with open(save_path, "wb") as f:
-            f.write(response.content)
-            
-        logger.info(f"图片已保存: {save_path}")
-        return save_path
-            
-    except requests.Timeout:
-        logger.error(f"下载图片超时: {image_url}")
-        return None
-    except Exception as e:
-        logger.error(f"保存图片时出错: {str(e)}")
-        return None
 
 
 if __name__ == "__main__":
