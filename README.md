@@ -8,6 +8,10 @@
 
 更多AI知识，见AI全书(https://aibook.ren)
 
+<div align="center">
+  <img src="images/example.png" alt="Image-Gen-Server Logo" width="100%">
+</div>
+
 
 ## 特性
 
@@ -46,6 +50,11 @@ IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
 ```
 
 ## Cursor集成
+
+<div align="center">
+  <img src="images/cursor_config.png" alt="Image-Gen-Server Logo" width="100%">
+</div>
+
 
 1. 打开Cursor设置
    - 点击左下角的设置图标
