@@ -1,17 +1,18 @@
 # Image-Gen-Server
 
 <div align="center">
-  <img src="images/logo_0.png" alt="Image-Gen-Server Logo" width="450">
+  <img src="images/logo_0.png" alt="Image-Gen-Server Logo" width="100%">
 </div>
 
 基于即梦AI的图像生成服务，专门设计用于与Cursor IDE集成。它接收来自Cursor的文本描述，生成相应的图像，并提供图片下载和保存功能。
+
+此插件的开发过程可以看我的网站：[开发一个MCP Server与Cursor集成，给Cursor插上翅膀！](https://aibook.ren/archives/mcp-server-for-cursor)
 
 更多AI知识，见AI全书(https://aibook.ren)
 
 <div align="center">
   <img src="images/example.png" alt="Image-Gen-Server Logo" width="100%">
 </div>
-
 
 ## 特性
 
@@ -22,32 +23,41 @@
 - 一次生成四张图，供更多选择
 
 ## 安装
-1. 环境准备
-- python 3.10+
-- 安装npm
-- 安装nodejs
-- 安装 pip install uv
-- 如果要调试，还需要安装这个：npm install -g @modelcontextprotocol/inspector@0.4.0
 
+1. 环境准备，MCP比较新的东西，依赖环境版本都比较新
+- python 3.10+
+
+- 安装npm
+
+- 安装nodejs（实测v15 v16都不行，开发环境验证v20可以，其他未验证）
+
+- 安装 pip install uv
+
+- 如果要调试，还需要安装这个：npm install -g @modelcontextprotocol/inspector@0.4.0
 2. 克隆项目
-```bash
-git clone https://github.com/fengin/image-gen-server.git
-cd image-gen-server
-```
+   
+   ```bash
+   git clone https://github.com/fengin/image-gen-server.git
+   cd image-gen-server
+   ```
 
 3. 安装依赖
-```bash
-pip install -r requirements.txt
-pip install uv
-```
+   
+   ```bash
+   pip install -r requirements.txt
+   pip install uv
+   ```
 
 4. 设置即梦Token和图片默认保存地址
-修改server.py文件下面两个配置
-```bash
-# API配置
-JIMENG_API_TOKEN = "057f7addf85dxxxxxxxxxxxxx" # 你登录即梦获得的session_id，支持多个，在后面用逗号分隔   
-IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
-```
+   修改server.py文件里面这两个配置
+   
+   ```bash
+   # API配置
+   JIMENG_API_TOKEN = "057f7addf85dxxxxxxxxxxxxx" # 你登录即梦获得的session_id，支持多个，在后面用逗号分隔   
+   IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
+   ```
+
+    
 
 ## Cursor集成
 
@@ -55,26 +65,32 @@ IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
   <img src="images/cursor_config.png" alt="Image-Gen-Server Logo" width="100%">
 </div>
 
-
 1. 打开Cursor设置
+   
    - 点击左下角的设置图标
    - 选择 Features > MCP Servers
    - 点击 "Add new MCP server"
 
 2. 填写服务器配置
+   
    - Name: `image-gen-server`（或其他你喜欢的名称）
+   
    - Type: `command`
+   
    - Command: 
+     
      ```bash
      uv run --with fastmcp fastmcp run D:\code\image-gen-service\server.py
      ```
+     
      注意：将路径替换为你的实际项目路径
+     
      - Windows示例: ` uv run --with fastmcp fastmcp run D:/code/image-gen-service/server.py`
      - macOS/Linux示例: ` uv run --with fastmcp fastmcp run /Users/username/code/image-gen-server/server.py`
-
-    windows路径问题比较多，D:/code/image-gen-server/server.py 各种斜杠都试下
-
-    填写完后，会弹出一个黑窗口，然后你就可以叫Cursor给你生成需要的图片了，目前黑窗口会一直运行，目前还没办法解决弹出这个的问题
+     
+     windows路径问题比较多，D:/code/image-gen-server/server.py 各种斜杠都试下
+     
+     填写完后，会弹出一个黑窗口，然后你就可以叫Cursor给你生成需要的图片了，目前黑窗口会一直运行，目前还没办法解决弹出这个的问题
 
 ## 使用方法
 
@@ -95,7 +111,7 @@ IMG_SAVA_FOLDER = "D:/code/image-gen-server/images" # 图片默认保存路径
 ```python
 async def generate_image(prompt: str, file_name: str, save_folder: str = None, sample_strength: float = 0.5, width: int = 1024, height: int = 1024) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
     """根据文本描述生成图片
-    
+
     Args:
         prompt: 图片的文本prompt描述
         file_name: 生成图片的文件名(不含路径，如果没有后缀则默认使用.jpg)
@@ -103,16 +119,17 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
         sample_strength: 生成图片的精细度(可选,范围0-1,默认0.5)
         width: 生成图片的宽度(可选,默认1024)
         height: 生成图片的高度(可选,默认1024)
-        
+
     Returns:
         List: 包含生成结果的JSON字符串
     """
 ```
 
 ### 技术实现
+
 1. server.py采用了fastmcp实现了mcp sever的能力，提供给cursor/claude使用
 
-2.sever.py调用了proxy.jimeng模块逆向与即梦AI进行交互。
+   2.sever.py调用了proxy.jimeng模块逆向与即梦AI进行交互。
 proxy.jimeng逆向模块也可以单独install使用，主要提供了以下主要功能：
 
 - 图像生成（generate_images）
@@ -127,7 +144,11 @@ proxy.jimeng逆向模块也可以单独install使用，主要提供了以下主�
 
 ```cmd
 # cursor agent模式下
-帮我把images目录下面的logo_0.png 图片logo加到readme.md里面 放在适当的位置
+#例子一
+根据提供过你的项目需求，帮我生成一张产品logo，放在项目目录images下面
+
+#例子二
+根据项目需求，帮我制作网站的首页，头部需要有banner图片。
 ```
 
 ## 许可证
@@ -147,5 +168,19 @@ MIT License
 
 2.正常运行后，想看调用日志，或者调试怎么弄
 
-  命令改成：uv run --with fastmcp fastmcp dev D:/code/image-gen-service/server.py
-  即把最后一个run 改成 dev， 你也可以找个终端运行看下，会有一个调试地址输出：http://localhost:5173/，你可以浏览器打开这地址MCP Inspector进行调试，具体MCP Inspector怎么使用，可以看官方文档
+  命令改成以下：
+
+```
+uv run --with fastmcp fastmcp dev D:/code/image-gen-service/server.py
+```
+
+
+  即把最后一个run 改成 dev。
+
+  或者找个终端运行以下命令进入调试模式：
+
+```
+fastmcp dev D:/code/image-gen-service/server.py
+```
+
+会有一个调试地址输出：http://localhost:5173/，你可以浏览器打开这地址MCP Inspector进行调试，具体MCP Inspector怎么使用，可以看官方文档

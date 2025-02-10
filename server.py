@@ -22,7 +22,7 @@ stdin.reconfigure(encoding='utf-8')
 stdout.reconfigure(encoding='utf-8')
 # 配置日志
 logging.basicConfig(
-    level=logging.DEBUG,
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)

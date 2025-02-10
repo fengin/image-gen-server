@@ -4,3 +4,4 @@ requests>=2.26.0
 psutil>=5.8.0
 fastmcp==0.4.1
 mcp==1.2.1
+brotlipy>=0.7.0
