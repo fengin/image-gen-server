@@ -40,7 +40,7 @@ async def list_tools():
                 "parameters": {
                     "prompt": {
                         "type": "string",
-                        "description": "图片的文本prompt描述",
+                        "description": "图片的文本prompt描述,800字符长度限制，一个汉字算一个字符长度",
                         "required": True
                     },
                     "file_name": {
@@ -60,12 +60,12 @@ async def list_tools():
                     },
                     "width": {
                         "type": "number",
-                        "description": "生成图片的宽度(可选,默认1024)",
+                        "description": "生成图片的宽度(可选,默认1024，最大1024)",
                         "required": False
                     },
                     "height": {
                         "type": "number",
-                        "description": "生成图片的高度(可选,默认1024)",
+                        "description": "生成图片的高度(可选,默认1024，最大1024)",
                         "required": False
                     }
                 }
@@ -78,12 +78,12 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
     """根据文本描述生成图片
     
     Args:
-        prompt: 图片的文本prompt描述
-        file_name: 生成图片的文件名(不含路径，如果没有后缀则默认使用.jpg)
+        prompt: 图片的文本prompt描述，800字符长度限制，一个汉字算一个字符长度
+        file_name: 生成图片的文件名，含后辍名(不含路径，如果没有后缀则默认使用.jpg)
         save_folder: 图片保存绝对地址目录(可选,默认使用IMG_SAVA_FOLDER)
         sample_strength: 生成图片的精细度(可选,范围0-1,默认0.5)
-        width: 生成图片的宽度(可选,默认1024)
-        height: 生成图片的高度(可选,默认1024)
+        width: 生成图片的宽度(可选,默认1024，最大1024)
+        height: 生成图片的高度(可选,默认1024，最大1024)
         
     Returns:
         List: 包含生成结果的JSON字符串
@@ -91,8 +91,8 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
     logger.info(f"收到生成请求: {prompt}")
     
     # 验证prompt参数
-    if not prompt:
-        error_msg = "prompt不能为空"
+    if not prompt or len(prompt) > 800:
+        error_msg = "prompt不能为空,且长度不能超过800"
         logger.error(error_msg)
         return [
             types.TextContent(
@@ -120,8 +120,8 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
         ]
     
     # 验证width和height参数
-    if width <= 0 or height <= 0:
-        error_msg = f"width和height必须大于0,当前值: width={width}, height={height}"
+    if width <= 0 or height <= 0 or width>1024 or height>1024:
+        error_msg = f"width和height必须大于0,小于1024，当前值: width={width}, height={height}"
         logger.error(error_msg)
         return [
             types.TextContent(
