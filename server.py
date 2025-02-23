@@ -50,7 +50,7 @@ async def list_tools():
                     },
                     "save_folder": {
                         "type": "string",
-                        "description": f"图片保存绝对地址目录(可选,默认:{IMG_SAVA_FOLDER})",
+                        "description": f"图片保存绝对地址目录(必选)",
                         "required": False
                     },
                     "sample_strength": {
@@ -74,13 +74,13 @@ async def list_tools():
     }
 
 @mcp.tool("generate_image")
-async def generate_image(prompt: str, file_name: str, save_folder: str = None, sample_strength: float = 0.5, width: int = 1024, height: int = 1024) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
+async def generate_image(prompt: str, file_name: str, save_folder: str, sample_strength: float = 0.5, width: int = 1024, height: int = 1024) -> list[types.TextContent | types.ImageContent | types.EmbeddedResource]:
     """根据文本描述生成图片
     
     Args:
         prompt: 图片的文本prompt描述，800字符长度限制，一个汉字算一个字符长度
         file_name: 生成图片的文件名，含后辍名(不含路径，如果没有后缀则默认使用.jpg)
-        save_folder: 图片保存绝对地址目录(可选,默认使用IMG_SAVA_FOLDER)
+        save_folder: 图片保存绝对地址目录(必选)
         sample_strength: 生成图片的精细度(可选,范围0-1,默认0.5)
         width: 生成图片的宽度(可选,默认1024，最大1024)
         height: 生成图片的高度(可选,默认1024，最大1024)
@@ -93,6 +93,20 @@ async def generate_image(prompt: str, file_name: str, save_folder: str = None, s
     # 验证prompt参数
     if not prompt or len(prompt) > 800:
         error_msg = "prompt不能为空,且长度不能超过800"
+        logger.error(error_msg)
+        return [
+            types.TextContent(
+                type="text",
+                text=json.dumps({
+                    "success": False,
+                    "error": error_msg,
+                    "images": []
+                }, ensure_ascii=False)
+            )
+        ]
+    # 验证save_folder参数
+    if not save_folder:
+        error_msg = "save_folder不能为空"
         logger.error(error_msg)
         return [
             types.TextContent(
