@@ -4,6 +4,8 @@
   <img src="images/logo_0.png" alt="Image-Gen-Server Logo" width="100%">
 </div>
 
+[![smithery badge](https://smithery.ai/badge/@fengin/image-gen-server)](https://smithery.ai/server/@fengin/image-gen-server)
+
 基于即梦AI的图像生成服务，专门设计用于与Cursor IDE集成。它接收来自Cursor的文本描述，生成相应的图像，并提供图片下载和保存功能。
 
 此插件的开发过程可以看我的网站：[开发一个MCP Server与Cursor集成，给Cursor插上翅膀！](https://aibook.ren/archives/mcp-server-for-cursor)
@@ -23,6 +25,14 @@
 - 一次生成四张图，供更多选择
 
 ## 安装
+
+### Installing via Smithery
+
+To install Image-Gen-Server for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@fengin/image-gen-server):
+
+```bash
+npx -y @smithery/cli install @fengin/image-gen-server --client claude
+```
 
 1. 环境准备，MCP比较新的东西，依赖环境版本都比较新
 - python 3.10+
