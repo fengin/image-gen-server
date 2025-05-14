@@ -1,3 +1,5 @@
+[![MseeP.ai Security Assessment Badge](https://mseep.net/pr/fengin-image-gen-server-badge.png)](https://mseep.ai/app/fengin-image-gen-server)
+
 # Image-Gen-Server
 
 <div align="center">
